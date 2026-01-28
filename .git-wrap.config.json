@@ -1,0 +1,17 @@
+{
+  "commit": {
+    "ensurePreCommit": true
+  },
+  "push": {
+    "pullBeforePush": true,
+    "pullStrategy": "git-default"
+  },
+  "commands": {
+    "checkout": {
+      "before": [],
+      "after": [
+        "# npm install"
+      ]
+    }
+  }
+}

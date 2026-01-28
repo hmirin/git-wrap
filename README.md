@@ -2,7 +2,7 @@
 
 **Git with guardrails. No more oops.**
 
-A Rust CLI that wraps dangerous Git commands with safety checks.
+A Rust CLI that wraps Git commands with safety checks and custom hooks.
 Drop-in replacement for `git` — unknown commands pass through transparently.
 
 ```bash
@@ -24,6 +24,7 @@ git-wrap push
 |----------------|-------------------|
 | Forgot to install pre-commit, pushed bad code | Auto-detect → install → configure hooks |
 | Push rejected because remote has new commits | Auto fetch → detect behind → pull → push |
+| Need to run scripts before/after git commands | Custom hooks for any command |
 | Learning curve for a new tool | Zero. Everything passes through to git |
 
 ---
@@ -44,6 +45,17 @@ alias git="git-wrap"
 ```
 
 Now your regular `git` is safe by default.
+
+---
+
+## Quick Start
+
+```bash
+# Generate a config file with defaults
+git-wrap create-config
+
+# Edit .git-wrap.config.json to customize
+```
 
 ---
 
@@ -99,6 +111,32 @@ To github.com:you/repo.git
    abc1234..def5678  main -> main
 ```
 
+### Custom Hooks
+
+**Run any command before/after any git command.**
+
+```json
+{
+  "commands": {
+    "checkout": {
+      "before": [],
+      "after": ["npm install"]
+    },
+    "pull": {
+      "before": [],
+      "after": ["npm install", "npm run build"]
+    }
+  }
+}
+```
+
+```bash
+$ git-wrap checkout feature-branch
+Switched to branch 'feature-branch'
+→ [after] npm install
+added 42 packages in 2s
+```
+
 ### Passthrough
 
 **Everything else goes straight to git.**
@@ -113,25 +151,71 @@ git-wrap whatever          # → git whatever
 
 ## Configuration
 
-### `.git-wrap.config.json` (optional)
+### Generate config
 
-Place in repository root.
+```bash
+git-wrap create-config
+```
+
+Creates `.git-wrap.config.json` with sensible defaults.
+
+### `.git-wrap.config.json`
 
 ```json
 {
+  "commit": {
+    "ensurePreCommit": true
+  },
   "push": {
     "pullBeforePush": true,
-    "pullStrategy": "rebase"
+    "pullStrategy": "git-default"
+  },
+  "commands": {
+    "checkout": {
+      "before": [],
+      "after": ["npm install"]
+    }
   }
 }
 ```
 
+### Options
+
+#### `commit`
+
 | Key | Value | Description |
 |-----|-------|-------------|
-| `pullBeforePush` | `true` / `false` | Enable auto-pull before push (default: `true`) |
+| `ensurePreCommit` | `true` / `false` | Auto-install pre-commit if config exists (default: `true`) |
+
+#### `push`
+
+| Key | Value | Description |
+|-----|-------|-------------|
+| `pullBeforePush` | `true` / `false` | Auto-pull before push if behind (default: `true`) |
 | `pullStrategy` | `"git-default"` | Respect git's `pull.rebase` setting |
-| | `"rebase"` | Always use `--rebase` (default) |
+| | `"rebase"` | Always use `--rebase` |
 | | `"merge"` | Always merge |
+
+#### `commands`
+
+Generic hooks for any git command.
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `before` | `string[]` | Shell commands to run before git command |
+| `after` | `string[]` | Shell commands to run after git command |
+
+Use `#` prefix to comment out a hook:
+
+```json
+{
+  "commands": {
+    "checkout": {
+      "after": ["# npm install"]
+    }
+  }
+}
+```
 
 ---
 
