@@ -164,11 +164,15 @@ Creates `.git-wrap.config.json` with sensible defaults.
 ```json
 {
   "commit": {
-    "ensurePreCommit": true
+    "ensurePreCommit": true,
+    "before": [],
+    "after": []
   },
   "push": {
     "pullBeforePush": true,
-    "pullStrategy": "git-default"
+    "pullStrategy": "git-default",
+    "before": [],
+    "after": []
   },
   "commands": {
     "checkout": {
@@ -183,27 +187,38 @@ Creates `.git-wrap.config.json` with sensible defaults.
 
 #### `commit`
 
-| Key | Value | Description |
-|-----|-------|-------------|
-| `ensurePreCommit` | `true` / `false` | Auto-install pre-commit if config exists (default: `true`) |
+| Key | Type | Description |
+|-----|------|-------------|
+| `ensurePreCommit` | `bool` | Auto-install pre-commit if config exists (default: `true`) |
+| `before` | `string[]` | Commands to run before commit |
+| `after` | `string[]` | Commands to run after commit |
 
 #### `push`
 
-| Key | Value | Description |
-|-----|-------|-------------|
-| `pullBeforePush` | `true` / `false` | Auto-pull before push if behind (default: `true`) |
-| `pullStrategy` | `"git-default"` | Respect git's `pull.rebase` setting |
-| | `"rebase"` | Always use `--rebase` |
-| | `"merge"` | Always merge |
+| Key | Type | Description |
+|-----|------|-------------|
+| `pullBeforePush` | `bool` | Auto-pull before push if behind (default: `true`) |
+| `pullStrategy` | `string` | `"git-default"`, `"rebase"`, or `"merge"` |
+| `before` | `string[]` | Commands to run before push |
+| `after` | `string[]` | Commands to run after push |
 
 #### `commands`
 
-Generic hooks for any git command.
+Generic hooks for any other git command.
 
-| Key | Type | Description |
-|-----|------|-------------|
-| `before` | `string[]` | Shell commands to run before git command |
-| `after` | `string[]` | Shell commands to run after git command |
+```json
+{
+  "commands": {
+    "checkout": {
+      "before": [],
+      "after": ["npm install"]
+    },
+    "pull": {
+      "after": ["npm install"]
+    }
+  }
+}
+```
 
 Use `#` prefix to comment out a hook:
 

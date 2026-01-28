@@ -1,10 +1,14 @@
 {
   "commit": {
-    "ensurePreCommit": true
+    "ensurePreCommit": true,
+    "before": [],
+    "after": []
   },
   "push": {
     "pullBeforePush": true,
-    "pullStrategy": "git-default"
+    "pullStrategy": "git-default",
+    "before": [],
+    "after": []
   },
   "commands": {
     "checkout": {

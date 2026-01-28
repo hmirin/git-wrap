@@ -29,12 +29,22 @@ pub struct CommitConfig {
     /// Automatically ensure pre-commit is installed and configured
     #[serde(default = "default_true")]
     pub ensure_pre_commit: bool,
+
+    /// Commands to run before commit
+    #[serde(default)]
+    pub before: Vec<String>,
+
+    /// Commands to run after commit
+    #[serde(default)]
+    pub after: Vec<String>,
 }
 
 impl Default for CommitConfig {
     fn default() -> Self {
         Self {
             ensure_pre_commit: true,
+            before: vec![],
+            after: vec![],
         }
     }
 }
@@ -49,6 +59,14 @@ pub struct PushConfig {
     /// Pull strategy: "git-default", "rebase", or "merge"
     #[serde(default)]
     pub pull_strategy: Option<String>,
+
+    /// Commands to run before push
+    #[serde(default)]
+    pub before: Vec<String>,
+
+    /// Commands to run after push
+    #[serde(default)]
+    pub after: Vec<String>,
 }
 
 impl Default for PushConfig {
@@ -56,6 +74,8 @@ impl Default for PushConfig {
         Self {
             pull_before_push: true,
             pull_strategy: None,
+            before: vec![],
+            after: vec![],
         }
     }
 }
@@ -114,10 +134,14 @@ impl Config {
         Self {
             commit: CommitConfig {
                 ensure_pre_commit: true,
+                before: vec![],
+                after: vec![],
             },
             push: PushConfig {
                 pull_before_push: true,
                 pull_strategy: Some("git-default".to_string()),
+                before: vec![],
+                after: vec![],
             },
             commands,
         }

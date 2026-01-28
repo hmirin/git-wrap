@@ -9,10 +9,8 @@ pub fn run(args: &[String]) -> Result<()> {
     git::repo::ensure_in_repo()?;
     let cfg = config::load()?;
 
-    // Run before hooks from config
-    if let Some(cmd_hooks) = cfg.get_hooks("push") {
-        hooks::run_before(cmd_hooks)?;
-    }
+    // Run before hooks
+    hooks::run_hooks(&cfg.push.before, "before")?;
 
     // Special behavior: pull before push
     if cfg.push.pull_before_push {
@@ -40,10 +38,8 @@ pub fn run(args: &[String]) -> Result<()> {
     // Run git push
     git::runner::run(&["push"], args)?;
 
-    // Run after hooks from config
-    if let Some(cmd_hooks) = cfg.get_hooks("push") {
-        hooks::run_after(cmd_hooks)?;
-    }
+    // Run after hooks
+    hooks::run_hooks(&cfg.push.after, "after")?;
 
     Ok(())
 }
