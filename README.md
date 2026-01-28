@@ -111,19 +111,44 @@ To github.com:you/repo.git
    abc1234..def5678  main -> main
 ```
 
+### Custom Commands
+
+**Define your own commands that run multiple steps.**
+
+```json
+{
+  "commands": {
+    "sync": {
+      "run": ["git fetch", "git pull --rebase", "git push"],
+      "description": "Fetch, pull, and push in one command"
+    },
+    "wip": {
+      "run": ["git add -A", "git commit -m 'WIP'"]
+    }
+  }
+}
+```
+
+```bash
+$ git-wrap sync
+→ git fetch
+→ git pull --rebase
+Already up to date.
+→ git push
+Everything up-to-date
+```
+
 ### Custom Hooks
 
-**Run any command before/after any git command.**
+**Run commands before/after any git command.**
 
 ```json
 {
   "commands": {
     "checkout": {
-      "before": [],
       "after": ["npm install"]
     },
     "pull": {
-      "before": [],
       "after": ["npm install", "npm run build"]
     }
   }
@@ -175,8 +200,11 @@ Creates `.git-wrap.config.json` with sensible defaults.
     "after": []
   },
   "commands": {
+    "sync": {
+      "run": ["git fetch", "git pull --rebase", "git push"],
+      "description": "Fetch, pull, and push in one command"
+    },
     "checkout": {
-      "before": [],
       "after": ["npm install"]
     }
   }
@@ -204,23 +232,41 @@ Creates `.git-wrap.config.json` with sensible defaults.
 
 #### `commands`
 
-Generic hooks for any other git command.
+Custom commands or hooks for git commands.
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `run` | `string[]` | Commands to execute (makes this a custom command) |
+| `description` | `string` | Optional description for the command |
+| `before` | `string[]` | Commands to run before git command (ignored if `run` is set) |
+| `after` | `string[]` | Commands to run after git command (ignored if `run` is set) |
+
+**Custom command** (has `run`):
+
+```json
+{
+  "commands": {
+    "sync": {
+      "run": ["git fetch", "git pull --rebase", "git push"],
+      "description": "Sync with remote"
+    }
+  }
+}
+```
+
+**Hooked git command** (no `run`):
 
 ```json
 {
   "commands": {
     "checkout": {
-      "before": [],
-      "after": ["npm install"]
-    },
-    "pull": {
       "after": ["npm install"]
     }
   }
 }
 ```
 
-Use `#` prefix to comment out a hook:
+Use `#` prefix to comment out a command:
 
 ```json
 {

@@ -17,31 +17,32 @@ fn main() -> Result<()> {
         Some("commit") => commands::commit::run(&args[1..]),
         Some("push") => commands::push::run(&args[1..]),
 
-        // Any other command: check for hooks, then passthrough
-        Some(cmd) => run_with_hooks(cmd, &args),
+        // Any other command: check for custom command or hooks, then passthrough
+        Some(cmd) => run_command(cmd, &args),
 
         // No command
         None => git::runner::passthrough(&args),
     }
 }
 
-/// Run a git command with optional before/after hooks from config
-fn run_with_hooks(cmd: &str, args: &[String]) -> Result<()> {
+/// Run a command - either custom command, hooked git command, or passthrough
+fn run_command(cmd: &str, args: &[String]) -> Result<()> {
     let config = config::load()?;
 
-    if let Some(hooks) = config.get_hooks(cmd) {
-        // Run before hooks
-        commands::hooks::run_before(hooks)?;
-
-        // Run git command
-        git::runner::run(&[cmd], &args[1..])?;
-
-        // Run after hooks
-        commands::hooks::run_after(hooks)?;
-
-        Ok(())
+    if let Some(cmd_config) = config.get_command(cmd) {
+        if cmd_config.is_custom() {
+            // Custom command: run the steps
+            commands::hooks::run_steps(&cmd_config.run)?;
+            Ok(())
+        } else {
+            // Wrapped git command with before/after hooks
+            commands::hooks::run_hooks(&cmd_config.before, "before")?;
+            git::runner::run(&[cmd], &args[1..])?;
+            commands::hooks::run_hooks(&cmd_config.after, "after")?;
+            Ok(())
+        }
     } else {
-        // No hooks configured, passthrough
+        // No config, passthrough to git
         git::runner::passthrough(args)
     }
 }

@@ -18,9 +18,9 @@ pub struct Config {
     #[serde(default)]
     pub push: PushConfig,
 
-    /// Generic before/after hooks for any command
+    /// Generic hooks or custom commands
     #[serde(default)]
-    pub commands: HashMap<String, CommandHooks>,
+    pub commands: HashMap<String, CommandConfig>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -81,14 +81,29 @@ impl Default for PushConfig {
 }
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
-pub struct CommandHooks {
-    /// Commands to run before the git command
-    #[serde(default)]
+pub struct CommandConfig {
+    /// If set, this is a custom command (doesn't call git)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub run: Vec<String>,
+
+    /// Description for custom commands
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    /// Commands to run before the git command (ignored if `run` is set)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub before: Vec<String>,
 
-    /// Commands to run after the git command
-    #[serde(default)]
+    /// Commands to run after the git command (ignored if `run` is set)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub after: Vec<String>,
+}
+
+impl CommandConfig {
+    /// Returns true if this is a custom command (has `run` steps)
+    pub fn is_custom(&self) -> bool {
+        !self.run.is_empty()
+    }
 }
 
 fn default_true() -> bool {
@@ -113,8 +128,8 @@ impl Config {
         }
     }
 
-    /// Get hooks for a specific command
-    pub fn get_hooks(&self, command: &str) -> Option<&CommandHooks> {
+    /// Get config for a specific command
+    pub fn get_command(&self, command: &str) -> Option<&CommandConfig> {
         self.commands.get(command)
     }
 
@@ -122,10 +137,27 @@ impl Config {
     pub fn generate_default() -> Self {
         let mut commands = HashMap::new();
 
+        // Custom command: sync (fetch + pull + push)
+        commands.insert(
+            "sync".to_string(),
+            CommandConfig {
+                run: vec![
+                    "git fetch".to_string(),
+                    "git pull --rebase".to_string(),
+                    "git push".to_string(),
+                ],
+                description: Some("Fetch, pull, and push in one command".to_string()),
+                before: vec![],
+                after: vec![],
+            },
+        );
+
         // Example: run npm install after checkout
         commands.insert(
             "checkout".to_string(),
-            CommandHooks {
+            CommandConfig {
+                run: vec![],
+                description: None,
                 before: vec![],
                 after: vec!["# npm install".to_string()],
             },
