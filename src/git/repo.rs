@@ -34,6 +34,26 @@ pub fn get_behind_ahead() -> Result<(u32, u32)> {
     Ok((behind, ahead))
 }
 
+/// Check if the repo has submodules (.gitmodules exists)
+pub fn has_submodules() -> bool {
+    std::path::Path::new(".gitmodules").exists()
+}
+
+/// Get the current branch name
+pub fn get_current_branch() -> Result<String> {
+    let output = runner::run_output(&["rev-parse", "--abbrev-ref", "HEAD"])?;
+    if output.is_empty() {
+        bail!("Could not determine current branch");
+    }
+    Ok(output)
+}
+
+/// Check if there are uncommitted changes (staged or unstaged)
+pub fn has_uncommitted_changes() -> bool {
+    // git diff --quiet exits with 1 if there are changes
+    !runner::check(&["diff", "--quiet"]) || !runner::check(&["diff", "--cached", "--quiet"])
+}
+
 /// Get a git config value as a boolean
 pub fn get_config_bool(key: &str) -> Option<bool> {
     let output = runner::run_output(&["config", "--get", key]).ok()?;

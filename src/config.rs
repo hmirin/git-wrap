@@ -10,6 +10,14 @@ pub const CONFIG_PATH: &str = ".git-wrap.config.json";
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct Config {
+    /// Safety guards (block dangerous operations unless --yes)
+    #[serde(default)]
+    pub safety: SafetyConfig,
+
+    /// Automation (auto-stash, submodule update, etc.)
+    #[serde(default)]
+    pub auto: AutoConfig,
+
     /// Special settings for commit command
     #[serde(default)]
     pub commit: CommitConfig,
@@ -21,6 +29,48 @@ pub struct Config {
     /// Generic hooks or custom commands
     #[serde(default)]
     pub commands: HashMap<String, CommandConfig>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SafetyConfig {
+    /// Block force push unless --yes is passed
+    #[serde(default = "default_true")]
+    pub block_force_push: bool,
+
+    /// Block commits to main/master unless --yes is passed
+    #[serde(default = "default_true")]
+    pub block_main_branch: bool,
+}
+
+impl Default for SafetyConfig {
+    fn default() -> Self {
+        Self {
+            block_force_push: true,
+            block_main_branch: true,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AutoConfig {
+    /// Auto-run git submodule update after pull/checkout/switch
+    #[serde(default = "default_true")]
+    pub submodule_update: bool,
+
+    /// Auto-add --autostash on pull when there are uncommitted changes
+    #[serde(default = "default_true")]
+    pub stash_on_pull: bool,
+}
+
+impl Default for AutoConfig {
+    fn default() -> Self {
+        Self {
+            submodule_update: true,
+            stash_on_pull: true,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -164,6 +214,8 @@ impl Config {
         );
 
         Self {
+            safety: SafetyConfig::default(),
+            auto: AutoConfig::default(),
             commit: CommitConfig {
                 ensure_pre_commit: true,
                 before: vec![],

@@ -16,6 +16,9 @@ fn main() -> Result<()> {
         // Special handled commands with default safety features
         Some("commit") => commands::commit::run(&args[1..]),
         Some("push") => commands::push::run(&args[1..]),
+        Some("pull") => commands::pull::run(&args[1..]),
+        Some("checkout") => commands::checkout::run("checkout", &args[1..]),
+        Some("switch") => commands::checkout::run("switch", &args[1..]),
 
         // Any other command: check for custom command or hooks, then passthrough
         Some(cmd) => run_command(cmd, &args),

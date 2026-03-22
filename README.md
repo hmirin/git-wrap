@@ -20,10 +20,18 @@ git-wrap push
 
 ## Why git-wrap?
 
+**Opinionated Git.** Like black for Python or biome for JS — just use it and get safe defaults.
+
+All features are **on by default**. Turn off what you don't need.
+
 | Common Mistake | git-wrap Solution |
 |----------------|-------------------|
 | Forgot to install pre-commit, pushed bad code | Auto-detect → install → configure hooks |
 | Push rejected because remote has new commits | Auto fetch → detect behind → pull → push |
+| Force pushed and lost remote history | Blocked by default. Use `--yes` to override |
+| Committed directly to main | Blocked by default. Use `--yes` to override |
+| Submodules out of date after pull/checkout | Auto `submodule update --init --recursive` |
+| Uncommitted changes conflict with pull | Auto-stash before pull |
 | Need to run scripts before/after git commands | Custom hooks for any command |
 | Learning curve for a new tool | Zero. Everything passes through to git |
 
@@ -61,9 +69,50 @@ git-wrap create-config
 
 ## Features
 
+### `git-wrap pull`
+
+**Auto-stash + submodule update.**
+
+```bash
+$ git-wrap pull
+→ Auto-stashing uncommitted changes
+→ git pull --autostash
+Already up to date.
+→ git submodule update --init --recursive
+```
+
+### `git-wrap checkout` / `switch`
+
+**Auto submodule update after switching branches.**
+
+```bash
+$ git-wrap checkout feature-branch
+Switched to branch 'feature-branch'
+→ git submodule update --init --recursive
+```
+
+### `git-wrap push`
+
+**Pull-before-push + force push protection.**
+
+```bash
+$ git-wrap push --force
+⚠ Force pushing can overwrite remote history.
+  Run with --yes to confirm: git-wrap push --force --yes
+
+$ git-wrap push --force --yes
+→ git push --force
+```
+
 ### `git-wrap commit`
 
-**Ensures pre-commit hooks are installed before committing.**
+**Ensures pre-commit hooks are installed. Blocks direct commits to main/master.**
+
+```bash
+$ git-wrap commit -m "oops"   # on main branch
+⚠ You are committing directly to main.
+  Run with --yes to confirm: git-wrap commit -m oops --yes
+```
 
 ```
 ┌───────────────────────────────────────────────┐
@@ -188,6 +237,14 @@ Creates `.git-wrap.config.json` with sensible defaults.
 
 ```json
 {
+  "safety": {
+    "blockForcePush": true,
+    "blockMainBranch": true
+  },
+  "auto": {
+    "submoduleUpdate": true,
+    "stashOnPull": true
+  },
   "commit": {
     "ensurePreCommit": true,
     "before": [],
@@ -212,6 +269,24 @@ Creates `.git-wrap.config.json` with sensible defaults.
 ```
 
 ### Options
+
+#### `safety`
+
+Safety guards — block dangerous operations unless `--yes` is passed. All default to `true`.
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `blockForcePush` | `bool` | Block `push --force` unless `--yes` (default: `true`) |
+| `blockMainBranch` | `bool` | Block commits to main/master unless `--yes` (default: `true`) |
+
+#### `auto`
+
+Automation — do the right thing without thinking. All default to `true`.
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `submoduleUpdate` | `bool` | Auto `submodule update` after pull/checkout/switch (default: `true`) |
+| `stashOnPull` | `bool` | Auto `--autostash` on pull if uncommitted changes (default: `true`) |
 
 #### `commit`
 

@@ -6,8 +6,8 @@
 - [ ] **`clean -f` confirmation** - Prompt before removing untracked files
 - [ ] **`branch -D` warning** - Warn when deleting unmerged branches
 - [ ] **`stash drop` confirmation** - Prompt before dropping stashes
-- [ ] **`push --force` confirmation** - Extra confirmation for force push
-- [ ] **Branch protection** - Block direct commits to main/master
+- [x] **`push --force` protection** - Block force push unless `--yes` (DONE)
+- [x] **Branch protection** - Block direct commits to main/master unless `--yes` (DONE)
 - [ ] **`amend` warning** - Warn when amending already-pushed commits
 - [ ] **`rebase` warning** - Warn when rebasing published branches
 
@@ -28,7 +28,8 @@
 
 - [ ] **`checkout` auto-stash** - Stash before checkout, pop after
 - [ ] **`rebase` auto-stash** - Stash before rebase, pop after
-- [ ] **`pull` auto-stash** - Stash before pull, pop after
+- [x] **`pull` auto-stash** - Auto `--autostash` on pull (DONE)
+- [x] **Submodule update** - Auto `submodule update` after pull/checkout/switch (DONE)
 - [ ] **Auto-fetch on status** - Fetch in background when running status
 - [ ] **Dependency install after checkout/pull** - Auto-run npm/pip install
 
