@@ -27,8 +27,9 @@ pub fn run(_args: &[String]) -> Result<()> {
     println!("    blockMainBranch: block commits to main/master (use --yes)");
     println!();
     println!("  {}", "auto:".bold());
-    println!("    submoduleUpdate: auto-update submodules after pull/checkout/switch");
-    println!("    stashOnPull:     auto-stash uncommitted changes on pull");
+    println!("    submoduleUpdate:    auto-update submodules after pull/checkout/switch");
+    println!("    stashOnPull:        auto-stash uncommitted changes on pull");
+    println!("    setUpstreamOnPush:  auto set-upstream on first push");
     println!();
     println!("  {}", "commit:".bold());
     println!("    ensurePreCommit: auto-install pre-commit hooks");

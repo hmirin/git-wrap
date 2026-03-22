@@ -30,6 +30,7 @@ All features are **on by default**. Turn off what you don't need.
 | Push rejected because remote has new commits | Auto fetch → detect behind → pull → push |
 | Force pushed and lost remote history | Blocked by default. Use `--yes` to override |
 | Committed directly to main | Blocked by default. Use `--yes` to override |
+| First push needs `--set-upstream origin xxx` | Auto `-u origin <branch>` on first push |
 | Submodules out of date after pull/checkout | Auto `submodule update --init --recursive` |
 | Uncommitted changes conflict with pull | Auto-stash before pull |
 | Need to run scripts before/after git commands | Custom hooks for any command |
@@ -93,9 +94,15 @@ Switched to branch 'feature-branch'
 
 ### `git-wrap push`
 
-**Pull-before-push + force push protection.**
+**Pull-before-push + auto set-upstream + force push protection.**
 
 ```bash
+# First push on a new branch? No problem.
+$ git-wrap push
+→ No upstream configured, setting to origin/feature-xxx
+→ git push -u origin feature-xxx
+
+# Force push? Blocked by default.
 $ git-wrap push --force
 ⚠ Force pushing can overwrite remote history.
   Run with --yes to confirm: git-wrap push --force --yes
@@ -287,6 +294,7 @@ Automation — do the right thing without thinking. All default to `true`.
 |-----|------|-------------|
 | `submoduleUpdate` | `bool` | Auto `submodule update` after pull/checkout/switch (default: `true`) |
 | `stashOnPull` | `bool` | Auto `--autostash` on pull if uncommitted changes (default: `true`) |
+| `setUpstreamOnPush` | `bool` | Auto `-u origin <branch>` on first push (default: `true`) |
 
 #### `commit`
 

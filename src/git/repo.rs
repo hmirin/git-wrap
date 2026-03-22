@@ -54,6 +54,23 @@ pub fn has_uncommitted_changes() -> bool {
     !runner::check(&["diff", "--quiet"]) || !runner::check(&["diff", "--cached", "--quiet"])
 }
 
+/// Get the default remote name (usually "origin")
+pub fn get_default_remote() -> Result<String> {
+    // Try to get the remote for the current branch
+    let branch = get_current_branch()?;
+    let remote = runner::run_output(&["config", &format!("branch.{}.remote", branch)]);
+    if let Ok(r) = remote {
+        if !r.is_empty() {
+            return Ok(r);
+        }
+    }
+    // Fall back to "origin" if it exists
+    if runner::check(&["remote", "get-url", "origin"]) {
+        return Ok("origin".to_string());
+    }
+    bail!("No remote configured")
+}
+
 /// Get a git config value as a boolean
 pub fn get_config_bool(key: &str) -> Option<bool> {
     let output = runner::run_output(&["config", "--get", key]).ok()?;

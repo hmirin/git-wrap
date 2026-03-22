@@ -33,12 +33,14 @@ pub fn run(args: &[String]) -> Result<()> {
     // Run before hooks
     hooks::run_hooks(&cfg.push.before, "before")?;
 
+    let has_upstream = git::repo::get_upstream().is_ok();
+
     // Special behavior: pull before push
     if cfg.push.pull_before_push {
         println!("{} git fetch", "→".cyan());
         git::runner::run_silent(&["fetch"])?;
 
-        if git::repo::get_upstream().is_ok() {
+        if has_upstream {
             let (behind, _ahead) = git::repo::get_behind_ahead()?;
 
             if behind > 0 {
@@ -51,14 +53,38 @@ pub fn run(args: &[String]) -> Result<()> {
                 println!("{} git pull {}", "→".cyan(), pull_args.join(" "));
                 git::runner::run(&["pull"], &pull_args)?;
             }
-        } else {
-            println!("{} No upstream configured, skipping pull", "!".yellow());
+        }
+    }
+
+    // Auto set-upstream on first push
+    let mut push_args = git_args;
+    if !has_upstream && cfg.auto.set_upstream_on_push {
+        // Only add -u if user didn't already specify -u/--set-upstream or a remote
+        let already_has_upstream_flag = push_args
+            .iter()
+            .any(|a| a == "-u" || a == "--set-upstream");
+        if !already_has_upstream_flag {
+            if let (Ok(remote), Ok(branch)) = (
+                git::repo::get_default_remote(),
+                git::repo::get_current_branch(),
+            ) {
+                println!(
+                    "{} No upstream configured, setting to {}/{}",
+                    "→".cyan(),
+                    remote,
+                    branch
+                );
+                push_args = vec!["-u".to_string(), remote, branch]
+                    .into_iter()
+                    .chain(push_args)
+                    .collect();
+            }
         }
     }
 
     // Run git push
-    println!("{} git push {}", "→".cyan(), git_args.join(" "));
-    git::runner::run(&["push"], &git_args)?;
+    println!("{} git push {}", "→".cyan(), push_args.join(" "));
+    git::runner::run(&["push"], &push_args)?;
 
     // Run after hooks
     hooks::run_hooks(&cfg.push.after, "after")?;

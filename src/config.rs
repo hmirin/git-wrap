@@ -62,6 +62,10 @@ pub struct AutoConfig {
     /// Auto-add --autostash on pull when there are uncommitted changes
     #[serde(default = "default_true")]
     pub stash_on_pull: bool,
+
+    /// Auto set-upstream on first push (git push -u origin <branch>)
+    #[serde(default = "default_true")]
+    pub set_upstream_on_push: bool,
 }
 
 impl Default for AutoConfig {
@@ -69,6 +73,7 @@ impl Default for AutoConfig {
         Self {
             submodule_update: true,
             stash_on_pull: true,
+            set_upstream_on_push: true,
         }
     }
 }
