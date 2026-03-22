@@ -71,6 +71,16 @@ pub fn get_default_remote() -> Result<String> {
     bail!("No remote configured")
 }
 
+/// Check if HEAD has been pushed to any remote tracking branch
+pub fn is_head_pushed() -> bool {
+    // git branch -r --contains HEAD lists remote branches that contain HEAD
+    if let Ok(output) = runner::run_output(&["branch", "-r", "--contains", "HEAD"]) {
+        !output.trim().is_empty()
+    } else {
+        false
+    }
+}
+
 /// Get a git config value as a boolean
 pub fn get_config_bool(key: &str) -> Option<bool> {
     let output = runner::run_output(&["config", "--get", key]).ok()?;

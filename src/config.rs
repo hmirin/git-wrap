@@ -41,6 +41,10 @@ pub struct SafetyConfig {
     /// Block commits to main/master unless --yes is passed
     #[serde(default = "default_true")]
     pub block_main_branch: bool,
+
+    /// Block --amend on already-pushed commits unless --yes is passed
+    #[serde(default = "default_true")]
+    pub block_amend_pushed: bool,
 }
 
 impl Default for SafetyConfig {
@@ -48,6 +52,7 @@ impl Default for SafetyConfig {
         Self {
             block_force_push: true,
             block_main_branch: true,
+            block_amend_pushed: true,
         }
     }
 }
@@ -66,6 +71,14 @@ pub struct AutoConfig {
     /// Auto set-upstream on first push (git push -u origin <branch>)
     #[serde(default = "default_true")]
     pub set_upstream_on_push: bool,
+
+    /// Auto set-upstream on first pull (git branch --set-upstream-to)
+    #[serde(default = "default_true")]
+    pub set_upstream_on_pull: bool,
+
+    /// Auto --prune on fetch (clean up stale remote tracking branches)
+    #[serde(default = "default_true")]
+    pub prune_on_fetch: bool,
 }
 
 impl Default for AutoConfig {
@@ -74,6 +87,8 @@ impl Default for AutoConfig {
             submodule_update: true,
             stash_on_pull: true,
             set_upstream_on_push: true,
+            set_upstream_on_pull: true,
+            prune_on_fetch: true,
         }
     }
 }

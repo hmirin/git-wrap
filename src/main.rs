@@ -12,6 +12,7 @@ fn main() -> Result<()> {
     match args.first().map(|s| s.as_str()) {
         // git-wrap specific commands
         Some("create-config") => commands::create_config::run(&args[1..]),
+        Some("cleanup") => commands::cleanup::run(&args[1..]),
 
         // Special handled commands with default safety features
         Some("commit") => commands::commit::run(&args[1..]),

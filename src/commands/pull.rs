@@ -27,6 +27,25 @@ pub fn run(args: &[String]) -> Result<()> {
 
 /// Internal pull logic, reusable from push command
 pub fn pull_internal(cfg: &Config, args: &[String]) -> Result<()> {
+    // Auto set-upstream on pull if no upstream configured
+    if cfg.auto.set_upstream_on_pull && git::repo::get_upstream().is_err() {
+        if let (Ok(remote), Ok(branch)) = (
+            git::repo::get_default_remote(),
+            git::repo::get_current_branch(),
+        ) {
+            let upstream = format!("{}/{}", remote, branch);
+            println!(
+                "{} No upstream configured, setting to {}",
+                "→".cyan(),
+                upstream
+            );
+            git::runner::run(
+                &["branch", &format!("--set-upstream-to={}", upstream)],
+                &[],
+            )?;
+        }
+    }
+
     let mut pull_args: Vec<String> = args.to_vec();
 
     // Auto-stash: add --autostash if there are uncommitted changes

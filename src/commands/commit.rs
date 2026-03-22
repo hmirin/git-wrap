@@ -34,6 +34,23 @@ pub fn run(args: &[String]) -> Result<()> {
         }
     }
 
+    // Safety: block --amend on already-pushed commits unless --yes
+    if cfg.safety.block_amend_pushed {
+        let is_amend = args.iter().any(|a| a == "--amend");
+        if is_amend && !has_yes && git::repo::is_head_pushed() {
+            eprintln!(
+                "{} This commit has already been pushed to a remote.",
+                "⚠".yellow()
+            );
+            eprintln!("  Amending it will require a force push.");
+            eprintln!(
+                "  Run with --yes to confirm: git-wrap commit {} --yes",
+                args.join(" ")
+            );
+            bail!("Amend of pushed commit blocked. Use --yes to override.");
+        }
+    }
+
     // Strip --yes from args before passing to git
     let git_args: Vec<String> = args.iter().filter(|a| a.as_str() != "--yes").cloned().collect();
 

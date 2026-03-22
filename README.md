@@ -30,9 +30,13 @@ All features are **on by default**. Turn off what you don't need.
 | Push rejected because remote has new commits | Auto fetch → detect behind → pull → push |
 | Force pushed and lost remote history | Blocked by default. Use `--yes` to override |
 | Committed directly to main | Blocked by default. Use `--yes` to override |
+| Amended a pushed commit, now need force push | Blocked by default. Use `--yes` to override |
 | First push needs `--set-upstream origin xxx` | Auto `-u origin <branch>` on first push |
+| First pull says "no tracking information" | Auto `--set-upstream-to` on first pull |
 | Submodules out of date after pull/checkout | Auto `submodule update --init --recursive` |
 | Uncommitted changes conflict with pull | Auto-stash before pull |
+| Stale remote branches cluttering `branch -r` | Auto `fetch --prune` |
+| Merged feature branches piling up | `git-wrap cleanup` deletes them |
 | Need to run scripts before/after git commands | Custom hooks for any command |
 | Learning curve for a new tool | Zero. Everything passes through to git |
 
@@ -113,12 +117,17 @@ $ git-wrap push --force --yes
 
 ### `git-wrap commit`
 
-**Ensures pre-commit hooks are installed. Blocks direct commits to main/master.**
+**Ensures pre-commit hooks are installed. Blocks direct commits to main/master. Blocks amend on pushed commits.**
 
 ```bash
 $ git-wrap commit -m "oops"   # on main branch
 ⚠ You are committing directly to main.
   Run with --yes to confirm: git-wrap commit -m oops --yes
+
+$ git-wrap commit --amend     # after pushing
+⚠ This commit has already been pushed to a remote.
+  Amending it will require a force push.
+  Run with --yes to confirm: git-wrap commit --amend --yes
 ```
 
 ```
@@ -218,6 +227,28 @@ Switched to branch 'feature-branch'
 added 42 packages in 2s
 ```
 
+### `git-wrap cleanup`
+
+**Delete local branches that have been merged.**
+
+```bash
+$ git-wrap cleanup
+→ Found 3 merged branch(es):
+  - feature-login
+  - fix-typo
+  - old-experiment
+
+! Run with --yes to delete: git-wrap cleanup --yes
+
+$ git-wrap cleanup --yes
+→ git branch -d feature-login
+→ git branch -d fix-typo
+→ git branch -d old-experiment
+✓ Deleted 3 branch(es).
+```
+
+Protected branches (main, master, current branch) are never deleted.
+
 ### Passthrough
 
 **Everything else goes straight to git.**
@@ -246,11 +277,15 @@ Creates `.git-wrap.config.json` with sensible defaults.
 {
   "safety": {
     "blockForcePush": true,
-    "blockMainBranch": true
+    "blockMainBranch": true,
+    "blockAmendPushed": true
   },
   "auto": {
     "submoduleUpdate": true,
-    "stashOnPull": true
+    "stashOnPull": true,
+    "setUpstreamOnPush": true,
+    "setUpstreamOnPull": true,
+    "pruneOnFetch": true
   },
   "commit": {
     "ensurePreCommit": true,
@@ -285,6 +320,7 @@ Safety guards — block dangerous operations unless `--yes` is passed. All defau
 |-----|------|-------------|
 | `blockForcePush` | `bool` | Block `push --force` unless `--yes` (default: `true`) |
 | `blockMainBranch` | `bool` | Block commits to main/master unless `--yes` (default: `true`) |
+| `blockAmendPushed` | `bool` | Block `--amend` on pushed commits unless `--yes` (default: `true`) |
 
 #### `auto`
 
@@ -295,6 +331,8 @@ Automation — do the right thing without thinking. All default to `true`.
 | `submoduleUpdate` | `bool` | Auto `submodule update` after pull/checkout/switch (default: `true`) |
 | `stashOnPull` | `bool` | Auto `--autostash` on pull if uncommitted changes (default: `true`) |
 | `setUpstreamOnPush` | `bool` | Auto `-u origin <branch>` on first push (default: `true`) |
+| `setUpstreamOnPull` | `bool` | Auto `--set-upstream-to` on first pull (default: `true`) |
+| `pruneOnFetch` | `bool` | Auto `--prune` on fetch to clean stale branches (default: `true`) |
 
 #### `commit`
 

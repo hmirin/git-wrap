@@ -37,8 +37,14 @@ pub fn run(args: &[String]) -> Result<()> {
 
     // Special behavior: pull before push
     if cfg.push.pull_before_push {
-        println!("{} git fetch", "→".cyan());
-        git::runner::run_silent(&["fetch"])?;
+        let fetch_args: Vec<&str> = if cfg.auto.prune_on_fetch {
+            println!("{} git fetch --prune", "→".cyan());
+            vec!["fetch", "--prune"]
+        } else {
+            println!("{} git fetch", "→".cyan());
+            vec!["fetch"]
+        };
+        git::runner::run_silent(&fetch_args)?;
 
         if has_upstream {
             let (behind, _ahead) = git::repo::get_behind_ahead()?;
