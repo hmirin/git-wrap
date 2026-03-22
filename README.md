@@ -261,6 +261,34 @@ git-wrap whatever          # → git whatever
 
 ---
 
+## Overriding Safety Checks
+
+Three ways to bypass safety blocks, for different situations:
+
+| Method | Scope | Use case |
+|--------|-------|----------|
+| `--yes` / `-y` flag | One command | "I know what I'm doing right now" |
+| `GIT_WRAP_YES=1` env var | Entire session | CI/CD pipelines |
+| Config `false` | Permanent | Team policy (e.g. allow force push) |
+
+```bash
+# Daily use: -y shorthand
+git-wrap commit --amend -y
+git-wrap push --force -y
+
+# CI/CD: env var skips all safety checks
+GIT_WRAP_YES=1 git-wrap push --force
+
+# Or export for the whole pipeline
+export GIT_WRAP_YES=1
+git-wrap commit -m "release"
+git-wrap push --force
+```
+
+Note: `GIT_WRAP_YES` only affects safety blocks. Automation features (auto-stash, auto-prune, set-upstream) still run normally.
+
+---
+
 ## Configuration
 
 ### Generate config

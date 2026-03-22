@@ -1,12 +1,13 @@
 use anyhow::Result;
 use colored::Colorize;
 
+use crate::cli;
 use crate::git;
 
 pub fn run(args: &[String]) -> Result<()> {
     git::repo::ensure_in_repo()?;
 
-    let has_yes = args.iter().any(|a| a == "--yes");
+    let has_yes = cli::has_yes(args);
 
     let current = git::repo::get_current_branch().unwrap_or_default();
 

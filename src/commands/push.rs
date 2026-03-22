@@ -4,12 +4,13 @@ use colored::Colorize;
 use super::hooks;
 use crate::config;
 use crate::git;
+use crate::cli;
 
 pub fn run(args: &[String]) -> Result<()> {
     git::repo::ensure_in_repo()?;
     let cfg = config::load()?;
 
-    let has_yes = args.iter().any(|a| a == "--yes");
+    let has_yes = cli::has_yes(args);
     let is_force = args
         .iter()
         .any(|a| a == "--force" || a == "-f" || a == "--force-with-lease");
@@ -27,8 +28,8 @@ pub fn run(args: &[String]) -> Result<()> {
         bail!("Force push blocked. Use --yes to override.");
     }
 
-    // Strip --yes from args before passing to git
-    let git_args: Vec<String> = args.iter().filter(|a| a.as_str() != "--yes").cloned().collect();
+    // Strip --yes/-y from args before passing to git
+    let git_args = cli::strip_yes(args);
 
     // Run before hooks
     hooks::run_hooks(&cfg.push.before, "before")?;

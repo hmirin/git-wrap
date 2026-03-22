@@ -3,6 +3,7 @@ use colored::Colorize;
 use std::path::Path;
 
 use super::hooks;
+use crate::cli;
 use crate::config;
 use crate::git;
 use crate::precommit;
@@ -11,7 +12,7 @@ pub fn run(args: &[String]) -> Result<()> {
     git::repo::ensure_in_repo()?;
     let cfg = config::load()?;
 
-    let has_yes = args.iter().any(|a| a == "--yes");
+    let has_yes = cli::has_yes(args);
 
     // Safety: block commits to main/master unless --yes
     if cfg.safety.block_main_branch {
@@ -51,8 +52,8 @@ pub fn run(args: &[String]) -> Result<()> {
         }
     }
 
-    // Strip --yes from args before passing to git
-    let git_args: Vec<String> = args.iter().filter(|a| a.as_str() != "--yes").cloned().collect();
+    // Strip --yes/-y from args before passing to git
+    let git_args = cli::strip_yes(args);
 
     // Run before hooks
     hooks::run_hooks(&cfg.commit.before, "before")?;
